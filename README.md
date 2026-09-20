@@ -1,78 +1,50 @@
-# React + TypeScript + Vite
+# Habit Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A simple habit tracking app built with React, TypeScript, and Vite. Add daily habits, mark them as done, and keep track of your streaks — all saved locally in your browser.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Add and delete habits** — create new habits through a simple form; the "Add" button stays disabled until you type a name, so you can't submit an empty habit.
+- **Daily progress tracking** — each habit shows how many times it's been completed today in a `0/1 done today` format.
+- **Streak counter** — tracks consecutive days a habit has been completed.
+- **Calendar navigation** — browse previous days/weeks freely; navigation into the future is limited to the current week.
+- **Persistent state** — habits and progress are saved to `localStorage`, so nothing resets when you refresh the page.
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- **React** + **TypeScript**
+- **Vite** — build tool and dev server
+- **React Context API** — global habit state management (`HabitProvider`)
+- **Custom hook** — `useLocalStorage` for syncing state with the browser's local storage
 
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Project Structure
 
 ```
-
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+src/
+├── components/
+│   ├── Button.tsx
+│   ├── HabitForm.tsx
+│   ├── HabitList.tsx
+│   └── Header.tsx
+├── context/
+│   └── HabitProvider.tsx
+├── hooks/
+│   └── useLocalStorage.ts
+├── App.tsx
+├── index.css
+└── main.tsx
 ```
+
+## Getting Started
+
+```bash
+# install dependencies
+npm install
+
+# start the dev server
+npm run dev
+```
+
+## What I Learned
+
+This project was a hands-on introduction to structuring a React app with TypeScript: separating UI components from shared state (via Context API), building a reusable custom hook for persistence, and handling UI edge cases like disabled states and date-based navigation limits.
