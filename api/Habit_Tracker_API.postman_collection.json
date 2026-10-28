@@ -1,0 +1,1263 @@
+{
+  "info": {
+    "name": "Habit Tracker API",
+    "description": "Практика API-тестирования на json-server (db.json). Базовый URL берётся из окружения.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 Habits CRUD",
+      "item": [
+        {
+          "name": "GET all habits",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/habits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is a non-empty array\", function () {",
+                  "    const habits = pm.response.json();",
+                  "    pm.expect(habits).to.be.an(\"array\");",
+                  "    pm.expect(habits.length).to.be.above(0);",
+                  "});",
+                  "",
+                  "pm.test(\"Every habit has required fields with valid types\", function () {",
+                  "    pm.response.json().forEach(function (h) {",
+                  "        pm.expect(h).to.have.property(\"id\");",
+                  "        pm.expect(h.title).to.be.a(\"string\");",
+                  "        pm.expect(h.frequency).to.be.oneOf([\"daily\", \"weekly\"]);",
+                  "        pm.expect(h.status).to.be.oneOf([\"active\", \"archived\"]);",
+                  "    });",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type is JSON\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET habit by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/habits/{{existingHabitId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits",
+                "{{existingHabitId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Habit id matches requested id\", function () {",
+                  "    const habit = pm.response.json();",
+                  "    pm.expect(String(habit.id)).to.eql(pm.environment.get(\"existingHabitId\"));",
+                  "    pm.expect(habit.title).to.be.a(\"string\").and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST create habit (random title)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/habits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"{{randomTitle}}\",\n  \"frequency\": \"daily\",\n  \"status\": \"active\",\n  \"createdAt\": \"2026-10-28\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Генерируем уникальное название перед каждым запуском",
+                  "pm.variables.set(\"randomTitle\", \"Habit \" + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains sent data and a new id\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"id\");",
+                  "    pm.expect(json.title).to.eql(pm.variables.get(\"randomTitle\"));",
+                  "    pm.expect(json.frequency).to.eql(\"daily\");",
+                  "    pm.expect(json.status).to.eql(\"active\");",
+                  "});",
+                  "",
+                  "// Сохраняем id для следующих запросов",
+                  "pm.environment.set(\"newHabitId\", pm.response.json().id);",
+                  "pm.environment.set(\"newHabitTitle\", pm.response.json().title);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET created habit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/habits/{{newHabitId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits",
+                "{{newHabitId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Created habit is persisted\", function () {",
+                  "    pm.expect(pm.response.json().title).to.eql(pm.environment.get(\"newHabitTitle\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT replace habit",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/habits/{{newHabitId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits",
+                "{{newHabitId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Replaced habit\",\n  \"frequency\": \"weekly\",\n  \"status\": \"active\",\n  \"createdAt\": \"2026-10-28\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Habit is fully replaced\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.title).to.eql(\"Replaced habit\");",
+                  "    pm.expect(json.frequency).to.eql(\"weekly\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH archive habit",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/habits/{{newHabitId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits",
+                "{{newHabitId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"archived\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Only status changed, other fields are kept\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.status).to.eql(\"archived\");",
+                  "    pm.expect(json.title).to.eql(\"Replaced habit\");",
+                  "    pm.expect(json.frequency).to.eql(\"weekly\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE habit",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/habits/{{newHabitId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits",
+                "{{newHabitId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET deleted habit (expect 404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/habits/{{newHabitId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits",
+                "{{newHabitId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Deleted habit is not found (404)\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Полный цикл: создать, прочитать, заменить, изменить, удалить, проверить удаление. Запускайте по порядку."
+    },
+    {
+      "name": "02 Filtering, sorting, pagination",
+      "item": [
+        {
+          "name": "GET active habits",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/habits?status=active",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "active"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"All returned habits are active\", function () {",
+                  "    const habits = pm.response.json();",
+                  "    pm.expect(habits.length).to.be.above(0);",
+                  "    habits.forEach(function (h) {",
+                  "        pm.expect(h.status).to.eql(\"active\");",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET weekly habits",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/habits?frequency=weekly",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits"
+              ],
+              "query": [
+                {
+                  "key": "frequency",
+                  "value": "weekly"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"All returned habits are weekly\", function () {",
+                  "    pm.response.json().forEach(function (h) {",
+                  "        pm.expect(h.frequency).to.eql(\"weekly\");",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET sorted by title (asc)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/habits?_sort=title&_order=asc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits"
+              ],
+              "query": [
+                {
+                  "key": "_sort",
+                  "value": "title"
+                },
+                {
+                  "key": "_order",
+                  "value": "asc"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Habits are sorted by title ascending\", function () {",
+                  "    const titles = pm.response.json().map(function (h) { return h.title; });",
+                  "    const sorted = titles.slice().sort();",
+                  "    pm.expect(titles).to.eql(sorted);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET page 1, limit 2",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/habits?_page=1&_limit=2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits"
+              ],
+              "query": [
+                {
+                  "key": "_page",
+                  "value": "1"
+                },
+                {
+                  "key": "_limit",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Returns at most 2 habits\", function () {",
+                  "    pm.expect(pm.response.json().length).to.be.at.most(2);",
+                  "});",
+                  "",
+                  "pm.test(\"X-Total-Count header is present and numeric\", function () {",
+                  "    pm.response.to.have.header(\"X-Total-Count\");",
+                  "    pm.expect(Number(pm.response.headers.get(\"X-Total-Count\"))).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET full-text search (q=water)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/habits?q=water",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "water"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Search finds the Drink water habit\", function () {",
+                  "    const habits = pm.response.json();",
+                  "    pm.expect(habits.length).to.be.above(0);",
+                  "    const titles = habits.map(function (h) { return h.title.toLowerCase(); });",
+                  "    pm.expect(titles.some(function (t) { return t.includes(\"water\"); })).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 Completions (nested resource)",
+      "item": [
+        {
+          "name": "GET completions of habit 1 (nested route)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/habits/{{existingHabitId}}/completions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits",
+                "{{existingHabitId}}",
+                "completions"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"All completions belong to the habit\", function () {",
+                  "    const items = pm.response.json();",
+                  "    pm.expect(items.length).to.be.above(0);",
+                  "    items.forEach(function (c) {",
+                  "        pm.expect(String(c.habitId)).to.eql(pm.environment.get(\"existingHabitId\"));",
+                  "        pm.expect(c.date).to.match(/^\\d{4}-\\d{2}-\\d{2}$/);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST mark habit as completed",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/completions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "completions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"habitId\": 1,\n  \"date\": \"2026-10-28\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Completion is created for habit 1\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"id\");",
+                  "    pm.expect(json.habitId).to.eql(1);",
+                  "    pm.expect(json.date).to.eql(\"2026-10-28\");",
+                  "});",
+                  "",
+                  "pm.environment.set(\"completionId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET completions by habitId and date (query)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/completions?habitId=1&date=2026-10-28",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "completions"
+              ],
+              "query": [
+                {
+                  "key": "habitId",
+                  "value": "1"
+                },
+                {
+                  "key": "date",
+                  "value": "2026-10-28"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"New completion is found by filter\", function () {",
+                  "    const items = pm.response.json();",
+                  "    pm.expect(items.length).to.be.above(0);",
+                  "    items.forEach(function (c) {",
+                  "        pm.expect(c.habitId).to.eql(1);",
+                  "        pm.expect(c.date).to.eql(\"2026-10-28\");",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE completion",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/completions/{{completionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "completions",
+                "{{completionId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 Negative and bug hunting",
+      "item": [
+        {
+          "name": "GET non-existent habit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/habits/99999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits",
+                "99999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET habit with non-numeric id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/habits/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits",
+                "abc"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "// Подумайте: не лучше ли здесь 400 Bad Request? Запишите наблюдение."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET non-existent resource",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/habitz",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habitz"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST invalid JSON syntax",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/habits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"broken json\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Broken JSON is rejected with 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[BUG?] POST empty body",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/habits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Ожидаемое поведение реального API: 400 и сообщение о валидации. json-server не валидирует данные, поэтому тест, скорее всего, упадёт. Это и есть найденный дефект, оформите баг-репорт."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Empty body is rejected with 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has an error message\", function () {",
+                  "    pm.expect(pm.response.text()).to.not.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[BUG?] POST habit without title",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/habits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"frequency\": \"daily\",\n  \"status\": \"active\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Название обязательное: ожидаем 400/422."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Habit without title is rejected (400 or 422)\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[BUG?] POST wrong data types",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/habits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": 12345,\n  \"frequency\": \"yearly\",\n  \"status\": \"unknown\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "title должен быть строкой, frequency только daily/weekly, status только active/archived."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Invalid types and enum values are rejected (400 or 422)\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[BUG?] POST duplicate title",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/habits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Drink water\",\n  \"frequency\": \"daily\",\n  \"status\": \"active\",\n  \"createdAt\": \"2026-10-28\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Привычка с таким названием уже есть. Ожидаем 409 Conflict (если по требованиям дубликаты запрещены)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Duplicate title is rejected with 409\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[BUG?] POST completion for non-existent habit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/completions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "completions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"habitId\": 99999,\n  \"date\": \"2026-10-28\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Отметка для несуществующей привычки: ожидаем 400/404/422."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Completion for unknown habit is rejected\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 404, 422]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[BUG?] POST completion with invalid date",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/completions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "completions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"habitId\": 1,\n  \"date\": \"not-a-date\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Дата должна быть в формате YYYY-MM-DD."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Invalid date is rejected (400 or 422)\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Тесты помечены [BUG?] проверяют ожидаемое поведение реального API. json-server ничего не валидирует, поэтому они упадут. Каждое падение это потенциальный баг, который нужно оформить в баг-репорт."
+    },
+    {
+      "name": "05 Data-driven (запускать с habits_data.csv)",
+      "item": [
+        {
+          "name": "POST habit from data file",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/habits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"{{title}}\",\n  \"frequency\": \"{{frequency}}\",\n  \"status\": \"active\",\n  \"createdAt\": \"2026-10-28\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "// Значения берутся из CSV на каждой итерации Collection Runner",
+                  "const expectedTitle = pm.iterationData.get(\"title\");",
+                  "const expectedFrequency = pm.iterationData.get(\"frequency\");",
+                  "",
+                  "if (expectedTitle) {",
+                  "    pm.test(\"Created habit matches the data file row\", function () {",
+                  "        const json = pm.response.json();",
+                  "        pm.expect(json.title).to.eql(expectedTitle);",
+                  "        pm.expect(json.frequency).to.eql(expectedFrequency);",
+                  "    });",
+                  "}",
+                  "",
+                  "// Чистим за собой: удаляем созданную запись следующим запросом",
+                  "pm.environment.set(\"dataHabitId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE habit created from data file",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/habits/{{dataHabitId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "habits",
+                "{{dataHabitId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Откройте Collection Runner, выберите только эту папку и файл habits_data.csv: будет 3 итерации."
+    }
+  ]
+}
