@@ -13,7 +13,7 @@ export function Header ({ visibleDates, onPrev, onNext }: HeaderProps) {
 
     const doneToday = habits.filter(h => h.completions.some(c => isToday(c)),).length
 
-    const dateRange = `${format(visibleDates[0], "MM d")} - ${format(visibleDates.at(-1)!, "MM d")}`
+    const dateRange = `${format(visibleDates[0], "MMM d")} - ${format(visibleDates.at(-1)!, "MMM d")}`
 
   return (
   <header className="flex items-center justify-between">

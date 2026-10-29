@@ -33,7 +33,7 @@ function HabitItem({ habit, visibleDates }: HabitItemProps) {
 
 
     return (
-        <div className="rounded-xl bg-zinc-800 p-4 flex-col gap-3">
+        <div className="rounded-xl bg-zinc-800 p-4 flex flex-col gap-3">
             <div className="flex items-center justify-between mb-3">
                 <div className="flex gap-3 items-center">
                 <span className="font-medium">{habit.name}</span>
